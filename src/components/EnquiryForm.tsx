@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { User, Building2, Phone, MapPin, MessageSquare, Check, Loader2, X } from "lucide-react";
 import { PACKS } from "./PricingSection";
 import { WHATSAPP_NUMBER } from "@/lib/site-config";
+import { saveEnquiry } from "@/lib/order-store";
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
@@ -78,8 +79,15 @@ export default function EnquiryForm({ selectedPackId, onClose }: EnquiryFormProp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // TODO: wire to Supabase or email API
-    await new Promise((r) => setTimeout(r, 1200));
+    await new Promise((r) => setTimeout(r, 900));
+    saveEnquiry({
+      name: form.name,
+      phone: form.phone,
+      businessName: form.business,
+      city: form.city,
+      message: form.message,
+      packName: selectedPack?.name || "Custom Pack",
+    });
     setLoading(false);
     setSubmittedPackId(selectedPackId);
   };

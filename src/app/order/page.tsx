@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { PACKS } from "@/components/PricingSection";
 import { UPI_ID, UPI_PAYEE_NAME } from "@/lib/site-config";
+import { saveOrder } from "@/lib/order-store";
 
 /* ─── Types ─────────────────────────────────────────────── */
 
@@ -467,7 +468,7 @@ function Step2({
 }: {
   pack: Pack | null;
   orderId: string;
-  onSubmit: () => void;
+  onSubmit: (utr: string) => void;
 }) {
   const [utr, setUtr] = useState("");
   const [copied, setCopied] = useState(false);
@@ -498,7 +499,7 @@ function Step2({
     setLoading(true);
     await new Promise((r) => setTimeout(r, 900));
     setLoading(false);
-    onSubmit();
+    onSubmit(utr.trim());
   };
 
   return (
@@ -894,6 +895,25 @@ function OrderCheckout() {
 
   const selectedPack = PACKS.find((p) => p.id === form.pack) || null;
 
+  const handlePaymentSubmitted = (utrValue: string) => {
+    saveOrder({
+      id: orderId,
+      customerName: form.name,
+      phone: form.phone,
+      businessName: form.business,
+      packId: form.pack,
+      packName: selectedPack?.name || "NFC Review Cards",
+      cardsCount: selectedPack ? parseInt(selectedPack.quantity.replace(/\D/g, "") || "5") : 5,
+      amount: selectedPack ? PACK_AMOUNTS[selectedPack.id] || 0 : 0,
+      pincode: form.pincode,
+      city: form.city,
+      address: form.address,
+      utr: utrValue,
+      status: "verification",
+    });
+    setStep(3);
+  };
+
   return (
     <div style={{ minHeight: "calc(100vh - 68px)", paddingTop: 68 }}>
       <div
@@ -981,7 +1001,7 @@ function OrderCheckout() {
               <Step2
                 pack={selectedPack}
                 orderId={orderId}
-                onSubmit={() => setStep(3)}
+                onSubmit={handlePaymentSubmitted}
               />
             )}
             {step === 3 && (

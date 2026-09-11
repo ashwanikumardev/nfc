@@ -2,17 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Package, CheckCircle, Clock, Truck } from "lucide-react";
+import { Search, Package, CheckCircle, Clock, Truck, CheckCheck, XCircle, AlertCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { WHATSAPP_NUMBER } from "@/lib/site-config";
+import { getOrderById, Order, OrderStatus } from "@/lib/order-store";
 
-type OrderStatus = "verification" | "confirmed" | "shipped" | null;
-
-function StatusBadge({ status }: { status: OrderStatus }) {
+function StatusBadge({ status, notes }: { status: OrderStatus; notes?: string }) {
   if (!status) return null;
 
-  const config = {
+  const config: Record<
+    OrderStatus,
+    { icon: React.ReactNode; label: string; color: string; bg: string; border: string; desc: string }
+  > = {
     verification: {
       icon: <Clock size={16} />,
       label: "Payment Verification",
@@ -27,19 +29,35 @@ function StatusBadge({ status }: { status: OrderStatus }) {
       color: "var(--accent)",
       bg: "rgba(201,169,110,0.08)",
       border: "rgba(201,169,110,0.25)",
-      desc: "Your payment has been verified and your order is confirmed. We are preparing your NFC review cards for dispatch.",
+      desc: "Your payment has been verified and your order is confirmed! We are encoding and printing your custom NFC review cards.",
     },
     shipped: {
       icon: <Truck size={16} />,
-      label: "Shipped",
+      label: "Shipped & In Transit",
       color: "#4ade80",
       bg: "rgba(74,222,128,0.08)",
       border: "rgba(74,222,128,0.2)",
-      desc: "Your order has been shipped! You'll receive a tracking link on your registered contact number shortly.",
+      desc: "Your order has been dispatched via courier with Pan-India express delivery. Tracking details will be shared on your WhatsApp.",
+    },
+    delivered: {
+      icon: <CheckCheck size={16} />,
+      label: "Delivered",
+      color: "#38bdf8",
+      bg: "rgba(56,189,248,0.08)",
+      border: "rgba(56,189,248,0.2)",
+      desc: "Your NFC review cards have been delivered! Place them on your checkout counters and start collecting 5-star Google reviews.",
+    },
+    cancelled: {
+      icon: <XCircle size={16} />,
+      label: "Cancelled / Payment Issue",
+      color: "#f87171",
+      bg: "rgba(248,113,113,0.08)",
+      border: "rgba(248,113,113,0.2)",
+      desc: "This order was cancelled or payment reference could not be matched. Please contact our support team on WhatsApp for immediate help.",
     },
   };
 
-  const c = config[status];
+  const c = config[status] || config.verification;
 
   return (
     <div
@@ -73,15 +91,31 @@ function StatusBadge({ status }: { status: OrderStatus }) {
       </div>
       <p
         style={{
-          color: "rgba(255,255,255,0.55)",
-          fontSize: 14,
+          color: "rgba(255,255,255,0.7)",
+          fontSize: 13,
           fontFamily: "Inter",
-          lineHeight: 1.7,
+          lineHeight: 1.6,
           margin: 0,
         }}
       >
         {c.desc}
       </p>
+
+      {notes && (
+        <div
+          style={{
+            marginTop: 12,
+            paddingTop: 10,
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+            fontSize: 12,
+            color: "rgba(255,255,255,0.5)",
+            fontFamily: "Inter",
+          }}
+        >
+          <strong style={{ color: "#fff" }}>Latest update: </strong>
+          {notes}
+        </div>
+      )}
     </div>
   );
 }
@@ -90,20 +124,18 @@ export default function TrackOrderPage() {
   const [orderId, setOrderId] = useState("");
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
-  // In a real app this would come from a database lookup.
-  // For now we simulate a "verification" status for any valid order ID.
-  const [status] = useState<OrderStatus>("verification");
+  const [order, setOrder] = useState<Order | null>(null);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!orderId.trim()) return;
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
+    await new Promise((r) => setTimeout(r, 600));
+    const result = getOrderById(orderId);
+    setOrder(result);
     setLoading(false);
     setSearched(true);
   };
-
-  const isValidOrderId = /^NFC-[A-Z0-9]{6}$/i.test(orderId.trim());
 
   const whatsappMsg = encodeURIComponent(
     `Hi, I'd like to check the status of my order ${orderId.toUpperCase()}. Could you please update me?`
@@ -121,9 +153,9 @@ export default function TrackOrderPage() {
           padding: "100px 24px 80px",
         }}
       >
-        <div style={{ maxWidth: 520, margin: "0 auto", width: "100%" }}>
+        <div style={{ maxWidth: 560, margin: "0 auto", width: "100%" }}>
           {/* Header */}
-          <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <div style={{ textAlign: "center", marginBottom: 36 }}>
             <div
               style={{
                 width: 60,
@@ -164,9 +196,9 @@ export default function TrackOrderPage() {
               <span
                 style={{ color: "var(--accent)", fontFamily: "Space Grotesk", fontWeight: 700 }}
               >
-                NFC-AB1C2D
+                NFC-748921
               </span>
-              ) to check the current status.
+              ) to check real-time status.
             </p>
           </div>
 
@@ -197,11 +229,9 @@ export default function TrackOrderPage() {
                   outline: "none",
                   letterSpacing: 0.5,
                 }}
-                placeholder="NFC-XXXXXX"
+                placeholder="e.g. NFC-748921"
                 value={orderId}
-                onChange={(e) =>
-                  setOrderId(e.target.value.toUpperCase())
-                }
+                onChange={(e) => setOrderId(e.target.value.toUpperCase())}
               />
               <button
                 type="submit"
@@ -227,7 +257,7 @@ export default function TrackOrderPage() {
               </button>
             </form>
 
-            {searched && (
+            {searched && order && (
               <div
                 style={{
                   borderTop: "1px solid rgba(255,255,255,0.06)",
@@ -238,51 +268,99 @@ export default function TrackOrderPage() {
                   gap: 16,
                 }}
               >
-                {/* Order ID display */}
+                {/* Order ID & Customer Info */}
                 <div
                   style={{
                     display: "flex",
                     justifyContent: "space-between",
-                    alignItems: "center",
+                    alignItems: "flex-start",
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: 12,
-                      color: "rgba(255,255,255,0.35)",
-                      fontFamily: "Inter",
-                      letterSpacing: 1,
-                    }}
-                  >
-                    ORDER ID
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: "Space Grotesk",
-                      fontWeight: 800,
-                      fontSize: 14,
-                      color: "var(--accent)",
-                      letterSpacing: 1,
-                    }}
-                  >
-                    {orderId.toUpperCase()}
-                  </span>
+                  <div>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: "rgba(255,255,255,0.35)",
+                        fontFamily: "Inter",
+                        letterSpacing: 1,
+                        display: "block",
+                        marginBottom: 4,
+                      }}
+                    >
+                      ORDER ID
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: "Space Grotesk",
+                        fontWeight: 800,
+                        fontSize: 16,
+                        color: "var(--accent)",
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      {order.id}
+                    </span>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: "rgba(255,255,255,0.35)",
+                        fontFamily: "Inter",
+                        letterSpacing: 1,
+                        display: "block",
+                        marginBottom: 4,
+                      }}
+                    >
+                      ORDERED ON
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: "Inter",
+                        fontSize: 13,
+                        color: "#fff",
+                      }}
+                    >
+                      {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </div>
                 </div>
 
-                <StatusBadge status={status} />
-
-                <p
+                {/* Details Breakdown */}
+                <div
                   style={{
-                    fontSize: 12,
-                    color: "rgba(255,255,255,0.25)",
-                    fontFamily: "Inter",
-                    lineHeight: 1.7,
-                    margin: 0,
+                    background: "rgba(255,255,255,0.02)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: 12,
+                    padding: "14px 16px",
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 12,
                   }}
                 >
-                  If you haven&apos;t heard from us in 24 hours or need urgent
-                  assistance, please reach out on WhatsApp.
-                </p>
+                  <div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>Customer / Business</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", marginTop: 2 }}>{order.customerName}</div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>{order.businessName}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>Selected Pack</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--accent)", marginTop: 2 }}>{order.packName}</div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>₹{order.amount.toLocaleString("en-IN")} · {order.cardsCount} cards</div>
+                  </div>
+                  {order.utr && (
+                    <div style={{ gridColumn: "1 / -1", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 8 }}>
+                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>UPI Reference (UTR): </span>
+                      <span style={{ fontSize: 12, fontFamily: "Space Grotesk", color: "#fff", letterSpacing: 0.5 }}>{order.utr}</span>
+                    </div>
+                  )}
+                </div>
+
+                <StatusBadge status={order.status} notes={order.notes} />
 
                 <a
                   href={whatsappUrl}
@@ -304,19 +382,58 @@ export default function TrackOrderPage() {
                     transition: "all 0.2s",
                   }}
                   onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.transform =
-                      "translateY(-2px)";
-                    (e.currentTarget as HTMLElement).style.boxShadow =
-                      "0 8px 24px rgba(37,211,102,0.4)";
+                    (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
+                    (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 24px rgba(37,211,102,0.4)";
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.transform =
-                      "translateY(0)";
+                    (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
                     (e.currentTarget as HTMLElement).style.boxShadow = "none";
                   }}
                 >
                   <WhatsAppIcon />
-                  Chat on WhatsApp →
+                  Need help? Chat on WhatsApp →
+                </a>
+              </div>
+            )}
+
+            {searched && !order && (
+              <div
+                style={{
+                  borderTop: "1px solid rgba(255,255,255,0.06)",
+                  paddingTop: 24,
+                  marginTop: 24,
+                  textAlign: "center",
+                }}
+              >
+                <div
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: "50%",
+                    background: "rgba(239,68,68,0.1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: "0 auto 12px",
+                    color: "#ef4444",
+                  }}
+                >
+                  <AlertCircle size={24} />
+                </div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 6 }}>
+                  Order Not Found
+                </h3>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.6, marginBottom: 16 }}>
+                  We couldn&apos;t find an order with ID &quot;{orderId}&quot;. Please verify the spelling from your confirmation screen, or contact us.
+                </p>
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary"
+                  style={{ textDecoration: "none", fontSize: 13, display: "inline-flex", gap: 8, alignItems: "center" }}
+                >
+                  <WhatsAppIcon /> Contact WhatsApp Support
                 </a>
               </div>
             )}
