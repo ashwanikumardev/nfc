@@ -1,4 +1,5 @@
 export const WHATSAPP_NUMBER = "919999999999";
+export const CONTACT_URL = "https://t.me/bitgoldy";
 export const CONTACT_EMAIL = "hello@nfcreviewcards.com";
 
 export const SITE_URL = "https://npcgooglereviews.com";

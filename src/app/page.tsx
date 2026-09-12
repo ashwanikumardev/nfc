@@ -2,6 +2,7 @@ import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import MarqueeStrip from "@/components/MarqueeStrip";
 import HowItWorksSection from "@/components/HowItWorksSection";
+import ProductShowcaseSection from "@/components/ProductShowcaseSection";
 import PricingSection from "@/components/PricingSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import FAQSection from "@/components/FAQSection";
@@ -18,6 +19,7 @@ export default function Home() {
         <HeroSection />
         <MarqueeStrip />
         <HowItWorksSection />
+        <ProductShowcaseSection />
         <PricingSection />
         <TestimonialsSection />
         <FAQSection />

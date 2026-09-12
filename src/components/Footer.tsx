@@ -1,13 +1,14 @@
 "use client";
 
-import { CONTACT_EMAIL } from "@/lib/site-config";
+import { CONTACT_EMAIL, CONTACT_URL } from "@/lib/site-config";
 
 const links = [
   { label: "How It Works", href: "#how-it-works" },
-  { label: "Real Proof", href: "#testimonials" },
+  { label: "Real Proof & Videos", href: "#showcase" },
+  { label: "Customer Reviews", href: "#testimonials" },
   { label: "Packs", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
-  { label: "Contact", href: `mailto:${CONTACT_EMAIL}` },
+  { label: "Contact Us", href: CONTACT_URL },
   { label: "Terms", href: "/terms" },
   { label: "Privacy", href: "/privacy" },
 ];
@@ -104,12 +105,15 @@ export default function Footer() {
             {/* Social icons */}
             <div style={{ display: "flex", gap: 12 }}>
               {[
-                { icon: <InstagramIcon />, label: "Instagram" },
-                { icon: <TikTokIcon />, label: "TikTok" },
-                { icon: <YoutubeIcon />, label: "YouTube" },
+                { icon: <InstagramIcon />, label: "Instagram", href: "https://www.instagram.com/reel/DdLnsR8zcgP/" },
+                { icon: <TikTokIcon />, label: "TikTok", href: "#" },
+                { icon: <YoutubeIcon />, label: "YouTube", href: "#" },
               ].map((s) => (
-                <span
+                <a
                   key={s.label}
+                  href={s.href}
+                  target={s.href !== "#" ? "_blank" : undefined}
+                  rel={s.href !== "#" ? "noopener noreferrer" : undefined}
                   aria-label={s.label}
                   style={{
                     width: 40,
@@ -122,6 +126,7 @@ export default function Footer() {
                     justifyContent: "center",
                     color: "rgba(255,255,255,0.5)",
                     transition: "all 0.2s",
+                    textDecoration: "none",
                   }}
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLElement).style.color = "var(--accent)";
@@ -135,7 +140,7 @@ export default function Footer() {
                   }}
                 >
                   {s.icon}
-                </span>
+                </a>
               ))}
             </div>
           </div>

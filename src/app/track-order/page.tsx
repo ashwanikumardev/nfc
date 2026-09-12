@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Search, Package, CheckCircle, Clock, Truck, CheckCheck, XCircle, AlertCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import WhatsAppButton from "@/components/WhatsAppButton";
-import { WHATSAPP_NUMBER } from "@/lib/site-config";
+import { CONTACT_URL } from "@/lib/site-config";
 import { getOrderById, Order, OrderStatus } from "@/lib/order-store";
 
 function StatusBadge({ status, notes }: { status: OrderStatus; notes?: string }) {
@@ -137,10 +137,7 @@ export default function TrackOrderPage() {
     setSearched(true);
   };
 
-  const whatsappMsg = encodeURIComponent(
-    `Hi, I'd like to check the status of my order ${orderId.toUpperCase()}. Could you please update me?`
-  );
-  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMsg}`;
+  const whatsappUrl = CONTACT_URL;
 
   return (
     <>

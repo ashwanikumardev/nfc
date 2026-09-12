@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { User, Building2, Phone, MapPin, MessageSquare, Check, Loader2, X } from "lucide-react";
 import { PACKS } from "./PricingSection";
-import { WHATSAPP_NUMBER } from "@/lib/site-config";
+import { CONTACT_URL } from "@/lib/site-config";
 import { saveEnquiry } from "@/lib/order-store";
 
 const inputStyle: React.CSSProperties = {
@@ -92,10 +92,7 @@ export default function EnquiryForm({ selectedPackId, onClose }: EnquiryFormProp
     setSubmittedPackId(selectedPackId);
   };
 
-  const whatsappMsg = encodeURIComponent(
-    `Hi, I'm interested in your NFC Review Cards. I would like to order the ${selectedPackDetails || "selected pack"}.`
-  );
-  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMsg}`;
+  const whatsappUrl = CONTACT_URL;
 
   if (!selectedPackId) return null;
 

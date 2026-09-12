@@ -1,6 +1,6 @@
 "use client";
 
-import { WHATSAPP_NUMBER } from "@/lib/site-config";
+import { CONTACT_URL } from "@/lib/site-config";
 
 function WhatsAppIcon() {
   return (
@@ -12,13 +12,9 @@ function WhatsAppIcon() {
 }
 
 export default function WhatsAppButton() {
-  const msg = encodeURIComponent(
-    "Hi, I'm interested in your NFC Review Cards. I would like to know more about the available packs."
-  );
-
   return (
     <a
-      href={`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`}
+      href={CONTACT_URL}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat on WhatsApp"
